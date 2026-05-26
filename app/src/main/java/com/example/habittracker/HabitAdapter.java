@@ -12,15 +12,16 @@ import java.util.List;
 
 public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> {
     private List<Habit> habits;
-    private OnDeleteListener deleteListener;
+    private OnHabitActionListener listener;
 
-    public interface OnDeleteListener {
+    public interface OnHabitActionListener {
         void onDelete(Habit habit);
+        void onStatusChanged(Habit habit);
     }
 
-    public HabitAdapter(List<Habit> habits, OnDeleteListener deleteListener) {
+    public HabitAdapter(List<Habit> habits, OnHabitActionListener listener) {
         this.habits = habits;
-        this.deleteListener = deleteListener;
+        this.listener = listener;
     }
 
     @NonNull
@@ -35,12 +36,26 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Habit habit = habits.get(position);
         holder.tvName.setText(habit.name);
+        holder.tvStreak.setText("🔥 " + habit.streak + " дн.");
+
+        holder.cbDone.setOnCheckedChangeListener(null);
         holder.cbDone.setChecked(habit.isDoneToday);
+        holder.cbDone.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            habit.isDoneToday = isChecked;
+            if (listener != null) {
+                listener.onStatusChanged(habit);
+            }
+        });
 
         holder.itemView.setOnLongClickListener(v -> {
-            deleteListener.onDelete(habit);
+            if (listener != null) {
+                listener.onDelete(habit);
+            }
             return true;
         });
+
+        holder.itemView.setAlpha(0f);
+        holder.itemView.animate().alpha(1f).setDuration(300).start();
     }
 
     @Override
@@ -50,11 +65,13 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.ViewHolder> 
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName;
+        TextView tvStreak;
         CheckBox cbDone;
 
         ViewHolder(View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvHabitName);
+            tvStreak = itemView.findViewById(R.id.tvStreak);
             cbDone = itemView.findViewById(R.id.cbDone);
         }
     }
