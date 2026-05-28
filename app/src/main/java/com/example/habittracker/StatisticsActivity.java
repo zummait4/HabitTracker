@@ -55,21 +55,22 @@ public class StatisticsActivity extends AppCompatActivity {
         layoutWeek.removeAllViews();
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat dayFormat = new SimpleDateFormat("EE", new Locale("ru")); // ПН, ВТ, СР...
         Calendar calendar = Calendar.getInstance();
 
+        // Массив дат за последние 7 дней (от 6 дней назад до сегодня)
         List<String> last7Days = new ArrayList<>();
+        List<String> dayNames = new ArrayList<>();
+
         for (int i = 6; i >= 0; i--) {
-            calendar.setTime(new Date());
-            calendar.add(Calendar.DAY_OF_YEAR, -i);
-            last7Days.add(sdf.format(calendar.getTime()));
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.DAY_OF_YEAR, -i);
+            last7Days.add(sdf.format(cal.getTime()));
+            dayNames.add(dayFormat.format(cal.getTime()));
         }
 
-        String[] dayNames = {"ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"};
-        Calendar todayCal = Calendar.getInstance();
-        int todayOfWeek = todayCal.get(Calendar.DAY_OF_WEEK) - 2;
-        if (todayOfWeek < 0) todayOfWeek = 6;
-
         List<String> habitLog = getHabitLog(habit.id);
+        String today = sdf.format(new Date());
 
         for (int i = 0; i < 7; i++) {
             LinearLayout dayLayout = new LinearLayout(this);
@@ -78,20 +79,21 @@ public class StatisticsActivity extends AppCompatActivity {
             dayLayout.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
             TextView dayName = new TextView(this);
-            dayName.setText(dayNames[i]);
+            dayName.setText(dayNames.get(i));
             dayName.setTextColor(Color.parseColor("#5C3A21"));
             dayName.setTextSize(12);
             dayName.setGravity(android.view.Gravity.CENTER);
 
             TextView dayStatus = new TextView(this);
             String date = last7Days.get(i);
+
             if (habitLog.contains(date)) {
                 dayStatus.setText("✅");
                 dayStatus.setTextSize(20);
-            } else if (date.equals(sdf.format(new Date()))) {
+            } else if (date.equals(today)) {
                 dayStatus.setText("⏳");
                 dayStatus.setTextSize(20);
-            } else if (date.compareTo(sdf.format(new Date())) < 0) {
+            } else if (date.compareTo(today) < 0) {
                 dayStatus.setText("❌");
                 dayStatus.setTextSize(20);
             } else {
@@ -105,7 +107,6 @@ public class StatisticsActivity extends AppCompatActivity {
             layoutWeek.addView(dayLayout);
         }
     }
-
     private List<String> getHabitLog(int habitId) {
         List<String> log = new ArrayList<>();
         log.add(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
